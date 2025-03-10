@@ -1,3 +1,16 @@
+## STABLE COIN ARCHITECTURE
+
+The attributes of this stable coin is as follows:
+
+1. Relative Stability: Anchored or Pegged -> $1.00
+   1. Chainlink Price feed.
+   2. set a function to exchange ETH & BTC OR THEIR DOLLAR EQUIVALENT
+2. Stability Mechanism (Minting): Algorithmic (decentralized)
+   1. People can only mint the stable coin with enough collateral 
+3. Collateral: Exogenous (Crypto: ETH & BTC)
+   1. wETH
+   2. wBTC
+
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
