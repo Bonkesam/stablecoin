@@ -141,7 +141,6 @@ contract DSCEngine is ReentrancyGuard {
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
             s_priceFeeds[tokenAddresses[i]] = priceFeedAddresses[i];
             s_collateralTokens.push(tokenAddresses[i]);
-            s_collateralTokens.push(tokenAddresses[i]);
         }
         i_dsc = DecentralizedStableCoin(dscAddress);
     }
@@ -355,7 +354,9 @@ contract DSCEngine is ReentrancyGuard {
             revert DSCEngine__TransferFailed();
         }
     }
-
+    /**
+     * @dev Low-level internal function. Do not call unless the function calling it is checking for the healthfactor being broken
+     */
     function _burnDsc(
         uint256 amountDscToBurn,
         address onBehalfOf,
