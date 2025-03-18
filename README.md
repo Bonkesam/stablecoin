@@ -1,79 +1,172 @@
-## STABLE COIN ARCHITECTURE
+# Foundry DeFi Stablecoin
 
-The attributes of this stable coin is as follows:
 
-1. Relative Stability: Anchored or Pegged -> $1.00
-   1. Chainlink Price feed.
-   2. set a function to exchange ETH & BTC OR THEIR DOLLAR EQUIVALENT
-2. Stability Mechanism (Minting): Algorithmic (decentralized)
-   1. People can only mint the stable coin with enough collateral 
-3. Collateral: Exogenous (Crypto: ETH & BTC)
-   1. wETH
-   2. wBTC
+# About
 
-## Foundry
+This protocol enables users to mint a USD-pegged stablecoin by depositing collateral in the form of WETH and WBTC. The system maintains price stability through overcollateralization while providing users with a reliable medium of exchange backed by blue-chip crypto assets.
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+- [Foundry DeFi Stablecoin](#foundry-defi-stablecoin)
+- [About](#about)
+- [Getting Started](#getting-started)
+  - [Requirements](#requirements)
+- [Updates](#updates)
+- [Usage](#usage)
+  - [Start a local node](#start-a-local-node)
+  - [Deploy](#deploy)
+  - [Testing](#testing)
+    - [Test Coverage](#test-coverage)
+- [Deployment to a testnet or mainnet](#deployment-to-a-testnet-or-mainnet)
+  - [Scripts](#scripts)
+  - [Estimate gas](#estimate-gas)
+- [Formatting](#formatting)
+- [Slither](#slither)
+- [Additional Info:](#additional-info)
+  - [Let's talk about what "Official" means](#lets-talk-about-what-official-means)
+  - [Summary](#summary)
 
-Foundry consists of:
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+# Getting Started
 
-## Documentation
+## Requirements
 
-https://book.getfoundry.sh/
+- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+   - To confirm successful installation, run `git --version` in your terminal. You should see a response displaying your installed Git version (for example: `git version 2.39.2`)
+- [foundry](https://getfoundry.sh/)
+  - To verify successful installation, run `forge --version` in your terminal. You should see a response like `forge 0.2.0 (816e00b 2023-03-16T00:05:26.396218Z)` indicating the installed version.`
 
-## Usage
 
-### Build
+# Updates
 
-```shell
-$ forge build
+- The latest version of openzeppelin-contracts has changes in the ERC20Mock file. The specific version used in this project is you need to install version 4.8.3 which can be done by `forge install openzeppelin/openzeppelin-contracts@v4.8.3 --no-commit` instead of `forge install openzeppelin/openzeppelin-contracts --no-commit`
+
+# Usage
+
+## Start a local node
+
+```
+make anvil
 ```
 
-### Test
+## Deploy
 
-```shell
-$ forge test
+This will default to your local node. You need to have it running in another terminal in order for it to deploy.
+
+```
+make deploy
 ```
 
-### Format
 
-```shell
-$ forge fmt
+## Testing
+
+We talk about 4 test tiers in the video.
+
+1. Unit
+2. Integration
+3. Forked
+4. Staging
+
+In this repo I cover #1 and Fuzzing.
+
+```
+forge test
 ```
 
-### Gas Snapshots
+### Test Coverage
 
-```shell
-$ forge snapshot
+```
+forge coverage
 ```
 
-### Anvil
+and for coverage based testing:
 
-```shell
-$ anvil
+```
+forge coverage --report debug
 ```
 
-### Deploy
+# Deployment to a testnet or mainnet
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+1. Setup environment variables
+
+You'll want to set your `SEPOLIA_RPC_URL` and `PRIVATE_KEY` as environment variables. You can add them to a `.env` file.
+
+- `PRIVATE_KEY`: The private key of your account (like from [metamask](https://metamask.io/)). **NOTE:** FOR DEVELOPMENT, PLEASE USE A KEY THAT DOESN'T HAVE ANY REAL FUNDS ASSOCIATED WITH IT.
+  - You can [learn how to export it here](https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-Export-an-Account-Private-Key).
+- `SEPOLIA_RPC_URL`: This is url of the sepolia testnet node you're working with. You can get setup with one for free from [Alchemy](https://alchemy.com/?a=673c802981)
+
+Optionally, add your `ETHERSCAN_API_KEY` if you want to verify your contract on [Etherscan](https://etherscan.io/).
+
+1. Get testnet ETH
+
+Head over to [faucets.chain.link](https://faucets.chain.link/) and get some testnet ETH. You should see the ETH show up in your metamask.
+
+2. Deploy
+
+```
+make deploy ARGS="--network sepolia"
 ```
 
-### Cast
+## Scripts
 
-```shell
-$ cast <subcommand>
+Instead of scripts, you can directly use the `cast` command to interact with the contract.
+
+For example, on Sepolia:
+
+1. Get some WETH
+
+```
+cast send 0xdd13E55209Fd76AfE204dBda4007C227904f0a81 "deposit()" --value 0.1ether --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY
 ```
 
-### Help
+2. Approve the WETH
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
 ```
+cast send 0xdd13E55209Fd76AfE204dBda4007C227904f0a81 "approve(address,uint256)" 0x091EA0838eBD5b7ddA2F2A641B068d6D59639b98 1000000000000000000 --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY
+```
+
+3. Deposit and Mint DSC
+
+```
+cast send 0x091EA0838eBD5b7ddA2F2A641B068d6D59639b98 "depositCollateralAndMintDsc(address,uint256,uint256)" 0xdd13E55209Fd76AfE204dBda4007C227904f0a81 100000000000000000 10000000000000000 --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY
+```
+
+## Estimate gas
+
+You can estimate how much gas things cost by running:
+
+```
+forge snapshot
+```
+
+And you'll see an output file called `.gas-snapshot`
+
+# Formatting
+
+To run code formatting:
+
+```
+forge fmt
+```
+
+# Slither
+
+```
+slither :; slither . --config-file slither.config.json
+```
+
+# Additional Info:
+Some users were having a confusion that whether Chainlink-brownie-contracts is an official Chainlink repository or not. Here is the info.
+Chainlink-brownie-contracts is an official repo. The repository is owned and maintained by the chainlink team for this very purpose, and gets releases from the proper chainlink release process. You can see it's still the `smartcontractkit` org as well.
+
+https://github.com/smartcontractkit/chainlink-brownie-contracts
+
+## Let's talk about what "Official" means
+The "official" release process is that chainlink deploys it's packages to [npm](https://www.npmjs.com/package/@chainlink/contracts). So technically, even downloading directly from `smartcontractkit/chainlink` is wrong, because it could be using unreleased code.
+
+So, then you have two options:
+
+1. Download from NPM and have your codebase have dependencies foreign to foundry
+2. Download from the chainlink-brownie-contracts repo which already downloads from npm and then packages it nicely for you to use in foundry.
+## Summary
+1. That is an official repo maintained by the same org
+2. It downloads from the official release cycle `chainlink/contracts` use (npm) and packages it nicely for digestion from foundry.
+
